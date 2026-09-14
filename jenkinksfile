@@ -1,0 +1,188 @@
+#!/bin/bash
+set -e
+
+# ============================================================
+# Configuration
+# ============================================================
+
+INSTALLER_DIR="$WORKSPACE/installs"
+BIN_DIR="/var/lib/jenkins/bin"
+HELM_PLUGINS="/var/lib/jenkins/.local/share/helm/plugins"
+
+export PATH="$BIN_DIR:$PATH"
+export HELM_PLUGINS="$HELM_PLUGINS"
+
+echo "========================================"
+echo "Environment"
+echo "========================================"
+
+echo "Workspace     : $WORKSPACE"
+echo "Installer dir : $INSTALLER_DIR"
+echo "Binary dir    : $BIN_DIR"
+echo "Helm plugins  : $HELM_PLUGINS"
+
+echo ""
+echo "Installer files:"
+ls -lh "$INSTALLER_DIR"
+
+
+# ============================================================
+# Create directories
+# ============================================================
+
+mkdir -p "$BIN_DIR"
+mkdir -p "$HELM_PLUGINS"
+
+
+# ============================================================
+# Install Helm
+# ============================================================
+
+echo ""
+echo "========================================"
+echo "Installing Helm v4.3.0"
+echo "========================================"
+
+cd "$INSTALLER_DIR"
+
+rm -rf linux-amd64
+
+tar -xzf helm-v4.3.0-linux-amd64.tar.gz
+
+install -m 755 linux-amd64/helm "$BIN_DIR/helm"
+
+rm -rf linux-amd64
+
+echo ""
+echo "Helm location:"
+which helm
+
+echo ""
+echo "Helm version:"
+helm version
+
+
+# ============================================================
+# Install Helmfile
+# ============================================================
+
+echo ""
+echo "========================================"
+echo "Installing Helmfile v1.8.0"
+echo "========================================"
+
+cd "$INSTALLER_DIR"
+
+rm -rf helmfile
+
+mkdir -p helmfile
+
+tar -xzf helmfile_1.8.0_linux_amd64.tar.gz -C helmfile
+
+install -m 755 helmfile/helmfile "$BIN_DIR/helmfile"
+
+rm -rf helmfile
+
+echo ""
+echo "Helmfile location:"
+which helmfile
+
+echo ""
+echo "Helmfile version:"
+helmfile --version
+
+echo ""
+echo "========================================"
+echo "Installing Helm Plugins"
+echo "========================================"
+
+rm -rf "$HELM_PLUGINS"
+mkdir -p "$HELM_PLUGINS"
+
+
+# ============================================================
+# helm-diff
+# ============================================================
+
+echo ""
+echo "Installing helm-diff..."
+
+rm -rf /tmp/helm-diff
+mkdir -p /tmp/helm-diff
+
+tar -xzf "$INSTALLER_DIR/helm-diff-linux-amd64.tgz" -C /tmp/helm-diff
+
+helm plugin install /tmp/helm-diff/diff
+
+
+# ============================================================
+# helm-secrets
+# ============================================================
+
+echo ""
+echo "Installing helm-secrets..."
+
+rm -rf /tmp/helm-secrets
+mkdir -p /tmp/helm-secrets
+
+tar -xzf "$INSTALLER_DIR/secrets-4.7.7.tgz" -C /tmp/helm-secrets
+
+echo "helm-secrets contents:"
+find /tmp/helm-secrets -maxdepth 2 -type f -print
+
+helm plugin install /tmp/helm-secrets/secrets
+
+
+# ============================================================
+# secrets-getter
+# ============================================================
+
+echo ""
+echo "Installing secrets-getter..."
+
+rm -rf /tmp/secrets-getter
+mkdir -p /tmp/secrets-getter
+
+tar -xzf "$INSTALLER_DIR/secrets-getter-4.7.7.tgz" -C /tmp/secrets-getter
+
+echo "secrets-getter contents:"
+find /tmp/secrets-getter -maxdepth 2 -type f -print
+
+helm plugin install /tmp/secrets-getter/secrets-getter
+
+
+# ============================================================
+# secrets-post-renderer
+# ============================================================
+
+echo ""
+echo "Installing secrets-post-renderer..."
+
+rm -rf /tmp/secrets-post-renderer
+mkdir -p /tmp/secrets-post-renderer
+
+tar -xzf "$INSTALLER_DIR/secrets-post-renderer-4.7.7.tgz" -C /tmp/secrets-post-renderer
+
+echo "secrets-post-renderer contents:"
+find /tmp/secrets-post-renderer -maxdepth 2 -type f -print
+
+helm plugin install /tmp/secrets-post-renderer/secrets-post-renderer
+
+
+# ============================================================
+# helm-git
+# ============================================================
+
+echo ""
+echo "Installing helm-git..."
+
+rm -rf /tmp/helm-git
+mkdir -p /tmp/helm-git
+
+tar -xzf "$INSTALLER_DIR/helm-git.tar.gz" -C /tmp/helm-git
+
+echo "helm-git contents:"
+find /tmp/helm-git -maxdepth 2 -type f -print
+
+helm plugin install /tmp/helm-git/helm-git
+
